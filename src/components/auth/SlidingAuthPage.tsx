@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +12,15 @@ interface SlidingAuthPageProps {
     initialMode?: 'login' | 'signup';
 }
 
-export default function SlidingAuthPage({ initialMode = 'login' }: SlidingAuthPageProps) {
+export default function SlidingAuthPage(props: SlidingAuthPageProps) {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SlidingAuthPageContent {...props} />
+        </Suspense>
+    );
+}
+
+function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps) {
     const [isLogin, setIsLogin] = useState(initialMode === 'login');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -73,17 +81,37 @@ export default function SlidingAuthPage({ initialMode = 'login' }: SlidingAuthPa
         e.preventDefault();
         setIsLoading(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            login({
-                id: 'mock-user-new',
-                name: `${signupData.firstName} ${signupData.lastName}`.trim(),
-                email: signupData.email,
-                role: 'patient',
-                isVerified: true
+            const res = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(signupData),
             });
-            router.push(callbackUrl);
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.error || 'Signup failed');
+                return;
+            }
+
+            // Auto-login after signup
+            const result = await signIn('credentials', {
+                email: signupData.email,
+                password: signupData.password,
+                redirect: false
+            });
+
+            if (result?.error) {
+                alert('Account created, but auto-login failed. Please sign in manually.');
+                toggleMode();
+            } else {
+                router.push(callbackUrl);
+                router.refresh();
+            }
+
         } catch (error) {
             console.error(error);
+            alert('Something went wrong during signup.');
         } finally {
             setIsLoading(false);
         }

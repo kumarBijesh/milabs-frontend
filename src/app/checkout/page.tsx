@@ -41,21 +41,88 @@ function CheckoutContent() {
 
     // ... (existing code)
 
-    const handlePayment = () => {
+    const handlePayment = async () => {
         setIsProcessing(true);
-        // Simulate payment verification
-        setTimeout(() => {
-            setIsProcessing(false);
-            const bookingId = `BK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            // In a real app, we would verify payment status here (completed vs failed)
-            const paymentStatus = 'completed';
+        try {
+            // 1. Create Order in our DB first (Pending status)
+            const bookingResponse = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    labId: deal.labId || 'default-lab-id',
+                    items: [{
+                        testId: deal.id.toString(),
+                        quantity: 1,
+                        price: deal.dealPrice
+                    }],
+                    totalAmount: currency === 'INR' ? deal.dealPrice * 83 : deal.dealPrice,
+                    bookingDate: new Date().toISOString(),
+                }),
+            });
 
-            if (paymentStatus === 'completed') {
-                router.push(`/booking/confirmation?id=${bookingId}&dealId=${deal.id}`);
-            } else {
-                alert('Payment Failed');
+            const dbOrder = await bookingResponse.json();
+            if (!bookingResponse.ok) throw new Error(dbOrder.error || 'Failed to create booking');
+
+            if (paymentMethod === 'stripe') {
+                // Stripe Simulation
+                setTimeout(() => {
+                    setIsProcessing(false);
+                    router.push(`/booking/confirmation?id=${dbOrder.id}&dealId=${deal.id}`);
+                }, 2000);
+                return;
             }
-        }, 2000);
+
+            // 2. Create Razorpay Order
+            const rpResponse = await fetch('/api/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: currency === 'INR' ? deal.dealPrice * 83 : deal.dealPrice }),
+            });
+
+            const rpOrder = await rpResponse.json();
+
+            // 3. Open Razorpay Popup
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount: rpOrder.amount,
+                currency: rpOrder.currency,
+                name: 'MiLabs',
+                description: deal.title,
+                order_id: rpOrder.id,
+                handler: async function (response: any) {
+                    // 4. Verify Payment & Generate QR Code
+                    const verifyRes = await fetch(`/api/bookings/${dbOrder.id}/verify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentId: response.razorpay_payment_id }),
+                    });
+
+                    if (verifyRes.ok) {
+                        router.push(`/booking/confirmation?id=${dbOrder.id}&dealId=${deal.id}&paymentId=${response.razorpay_payment_id}`);
+                    } else {
+                        alert('Payment recorded but verification failed. Please contact support.');
+                    }
+                },
+                prefill: {
+                    name: 'User',
+                    email: 'user@example.com',
+                },
+                theme: {
+                    color: '#2563eb',
+                },
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.on('payment.failed', function (response: any) {
+                alert('Payment Failed: ' + response.error.description);
+            });
+            rzp.open();
+        } catch (error: any) {
+            console.error('Payment Error:', error);
+            alert(error.message || 'Something went wrong. Please try again.');
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     return (

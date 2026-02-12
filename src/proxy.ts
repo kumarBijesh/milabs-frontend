@@ -26,12 +26,17 @@ const authMiddleware = withAuth(
             return NextResponse.redirect(new URL("/", req.url));
         }
 
-        // 2. RBAC - Lab Admin protection (Partner Portal)
+        // 2. RBAC - Admin protection
+        if (path.startsWith("/admin") && !["admin", "super_admin"].includes(userRole)) {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+
+        // 3. RBAC - Lab Admin protection (Partner Portal)
         if ((path.startsWith("/lab") || path.startsWith("/partner")) && !["super_admin", "lab_admin"].includes(userRole)) {
             return NextResponse.redirect(new URL("/", req.url));
         }
 
-        // 3. RBAC - Patient protection
+        // 4. RBAC - Patient protection
         if (path.startsWith("/patient") && !["patient", "super_admin"].includes(userRole)) {
             return NextResponse.redirect(new URL("/", req.url));
         }
@@ -45,7 +50,7 @@ const authMiddleware = withAuth(
     }
 );
 
-export async function proxy(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
     // @ts-expect-error - withAuth expects NextMiddleware signature
     return await authMiddleware(req, {
         waitUntil: () => Promise.resolve()

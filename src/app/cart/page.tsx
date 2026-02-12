@@ -1,20 +1,19 @@
 "use client";
-// Force rebuild: Cart Page
 
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 import { useUserStore } from '@/store/userStore';
 import { useState, useEffect } from 'react';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, CreditCard, Wallet } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
     const { items, removeFromCart, totalPrice, clearCart } = useCartStore();
-    const { currency, isAuthenticated } = useUserStore();
+    const { currency, setCurrency, isAuthenticated, user } = useUserStore();
     const [mounted, setMounted] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -24,30 +23,109 @@ export default function CartPage() {
     const formatPrice = (price: number) => {
         if (!mounted) return `$${price}`;
         if (currency === 'INR') {
-            return `₹${(price * 83).toLocaleString()}`;
+            return `₹${Math.round(price * 83).toLocaleString()}`;
         }
         return `$${price}`;
     };
 
-    const handlePayment = () => {
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const handlePayment = async () => {
         if (!isAuthenticated) {
             toast.error('Please log in to proceed with payment');
-            router.push('/auth/login');
+            router.push('/auth/login?callbackUrl=/cart');
             return;
         }
 
-        setIsProcessing(true);
+        setIsLoading(true);
 
-        // Simulate Payment Gateway Loading
-        toast.message('Initiating Payment Gateway...');
+        try {
+            // 1. Create Order on Backend
+            const res = await fetch('/api/payment/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: currency === 'INR' ? Math.round(totalPrice() * 83) : totalPrice(),
+                    currency: currency,
+                    gateway: currency === 'INR' ? 'razorpay' : 'stripe',
+                    items: items
+                }),
+            });
 
-        setTimeout(() => {
-            // Simulate success
-            clearCart();
-            setIsProcessing(false);
-            toast.success('Payment Successful! Order placed.');
-            router.push('/');
-        }, 3000);
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Failed to initiate payment');
+
+            // 2. Handle Gateway Specific Flow
+            if (data.gateway === 'razorpay') {
+                const isLoaded = await loadRazorpay();
+                if (!isLoaded) {
+                    toast.error('Razorpay SDK failed to load');
+                    setIsLoading(false);
+                    return;
+                }
+
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'MiLabs Health',
+                    description: 'Lab Test Booking',
+                    order_id: data.orderId,
+                    handler: async function (response: any) {
+                        // Verify Payment
+                        const verifyRes = await fetch('/api/payment/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                signature: response.razorpay_signature,
+                                dbOrderId: data.dbOrderId,
+                                gateway: 'razorpay'
+                            }),
+                        });
+
+                        const verifyData = await verifyRes.json();
+                        if (verifyData.success) {
+                            clearCart();
+                            toast.success('Payment Successful!');
+                            router.push('/patient/bookings');
+                        } else {
+                            toast.error('Payment Verification Failed');
+                        }
+                    },
+                    prefill: {
+                        name: user?.name,
+                        email: user?.email,
+                    },
+                    theme: {
+                        color: '#2563eb',
+                    },
+                };
+
+                const rzp = new (window as any).Razorpay(options);
+                rzp.open();
+                setIsLoading(false); // Modal is open, so stop loading state
+            }
+            else if (data.gateway === 'stripe') {
+                // Redirect to Stripe Checkout
+                window.location.href = data.url;
+            }
+
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Something went wrong');
+            setIsLoading(false);
+        }
     };
 
     if (!mounted) return null;
@@ -127,6 +205,25 @@ export default function CartPage() {
                         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 sticky top-24">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Order Summary</h3>
 
+                            {/* Currency Toggle */}
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mb-6">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Currency</span>
+                                <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+                                    <button
+                                        onClick={() => setCurrency('USD')}
+                                        className={`px-3 py-1 rounded-md text-sm font-bold transition-all ${currency === 'USD' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'}`}
+                                    >
+                                        $ USD
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrency('INR')}
+                                        className={`px-3 py-1 rounded-md text-sm font-bold transition-all ${currency === 'INR' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'}`}
+                                    >
+                                        ₹ INR
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="space-y-3 text-sm mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                                 <div className="flex justify-between text-slate-500">
                                     <span>Subtotal</span>
@@ -144,21 +241,21 @@ export default function CartPage() {
 
                             <button
                                 onClick={handlePayment}
-                                disabled={isProcessing}
+                                disabled={isLoading}
                                 className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-bold text-base hover:bg-slate-800 dark:hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/10 mb-4"
                             >
-                                {isProcessing ? (
+                                {isLoading ? (
                                     <>Processing...</>
                                 ) : (
                                     <>
-                                        Make Payment <ArrowRight className="w-4 h-4" />
+                                        Pay with {currency === 'INR' ? 'Razorpay' : 'Stripe'} <ArrowRight className="w-4 h-4" />
                                     </>
                                 )}
                             </button>
 
                             <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-1">
                                 <ShieldCheck className="w-3 h-3 text-green-500" />
-                                Secure Checkout with Stripe/Razorpay
+                                Secure Checkout with {currency === 'INR' ? 'Razorpay' : 'Stripe'}
                             </p>
                         </div>
                     </div>

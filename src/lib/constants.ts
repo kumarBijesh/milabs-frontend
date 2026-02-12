@@ -52,7 +52,8 @@ export const trendingDeals = [
         originalPrice: 99,
         dealPrice: 49,
         tags: ["Best Seller", "Limited Time"],
-        image: "https://images.unsplash.com/photo-1579684385136-137af75135a8?auto=format&fit=crop&q=80&w=800"
+        image: "https://images.unsplash.com/photo-1579684385136-137af75135a8?auto=format&fit=crop&q=80&w=800",
+        labId: "cm73ndj8t0000ub08c4e0p9p7"
     },
     {
         id: 2,
@@ -64,7 +65,8 @@ export const trendingDeals = [
         originalPrice: 75,
         dealPrice: 29,
         tags: ["Popular"],
-        image: "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800"
+        image: "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=800",
+        labId: "cm73ndj8t0000ub08c4e0p9p8"
     },
     {
         id: 3,
@@ -76,7 +78,8 @@ export const trendingDeals = [
         originalPrice: 120,
         dealPrice: 65,
         tags: ["Sponsored"],
-        image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800"
+        image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800",
+        labId: "cm73ndj8t0000ub08c4e0p9p9"
     },
     {
         id: 4,
@@ -88,6 +91,7 @@ export const trendingDeals = [
         originalPrice: 80,
         dealPrice: 35,
         tags: [],
-        image: "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&q=80&w=800"
+        image: "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&q=80&w=800",
+        labId: "cm73ndj8t0000ub08c4e0p9p7"
     }
 ];

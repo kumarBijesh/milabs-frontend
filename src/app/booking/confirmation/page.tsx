@@ -11,33 +11,43 @@ function ConfirmationContent() {
     const bookingId = searchParams.get('id');
     const mode = searchParams.get('mode');
 
-    // Simulate Payment Verification
-    const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>(
-        mode === 'view' ? 'success' : 'verifying'
-    );
+    const [order, setOrder] = useState<any>(null);
+    const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
 
     useEffect(() => {
-        if (mode === 'view') return;
+        const fetchOrder = async () => {
+            if (!bookingId) return;
+            try {
+                const res = await fetch(`/api/bookings?id=${bookingId}`);
+                const data = await res.json();
+                // Filter for our specific order
+                const ourOrder = Array.isArray(data) ? data.find((o: any) => o.id === bookingId) : data;
 
-        // Simulate checking payment status with backend
-        // In a real app, this would verify the transaction ID
-        const timer = setTimeout(() => {
-            setStatus('success');
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, [mode]);
+                if (ourOrder) {
+                    setOrder(ourOrder);
+                    setStatus('success');
+                } else {
+                    setStatus('failed');
+                }
+            } catch (err) {
+                console.error('Fetch order error:', err);
+                setStatus('failed');
+            }
+        };
 
-    // Calculate expiry (30 days from now)
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 30);
-    const expiryString = expiryDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        fetchOrder();
+    }, [bookingId]);
 
-    if (status === 'verifying') {
+    const expiryString = order?.qrExpiresAt
+        ? new Date(order.qrExpiresAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        : '30 Days from Booking';
+
+    if (status === 'loading') {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Verifying Payment...</h2>
-                <p className="text-slate-500">Please wait while we confirm your transaction.</p>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Verifying Booking...</h2>
+                <p className="text-slate-500">Retrieving your ticket information.</p>
             </div>
         );
     }
@@ -46,8 +56,8 @@ function ConfirmationContent() {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 text-center">
                 <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Payment Failed</h2>
-                <p className="text-slate-500 mb-6">We could not verify your payment. Please try again.</p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Booking Not Found</h2>
+                <p className="text-slate-500 mb-6">We could not retrieve this booking. Please contact support.</p>
                 <button onClick={() => router.back()} className="px-6 py-2 bg-slate-900 text-white rounded-lg">Try Again</button>
             </div>
         );
@@ -74,12 +84,18 @@ function ConfirmationContent() {
                     {/* QR Code Section */}
                     <div className="flex flex-col items-center justify-center space-y-4">
                         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group cursor-pointer">
-                            {/* QR Code API */}
-                            <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${bookingId}`}
-                                alt="Booking QR Code"
-                                className="w-48 h-48 object-contain"
-                            />
+                            {/* Stored QR Code */}
+                            {order?.qrCode ? (
+                                <img
+                                    src={order.qrCode}
+                                    alt="Booking QR Code"
+                                    className="w-48 h-48 object-contain"
+                                />
+                            ) : (
+                                <div className="w-48 h-48 flex items-center justify-center bg-slate-50 rounded-xl border border-dashed text-slate-400 text-xs text-center p-4">
+                                    QR Code not generated yet. Please wait or refresh.
+                                </div>
+                            )}
                             <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl">
                                 <QrCode className="w-8 h-8 text-slate-900 mb-1" />
                                 <span className="text-xs font-bold text-slate-900">Click to Enlarge</span>

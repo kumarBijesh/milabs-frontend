@@ -37,6 +37,18 @@ interface Patient {
     createdAt: Date;
 }
 
+
+interface Booking {
+    id: string;
+    user: string;
+    email: string;
+    date: Date;
+    amount: number;
+    status: string;
+    paymentStatus: string;
+    items: string;
+}
+
 interface ContactInquiry {
     id: string;
     name: string;
@@ -49,11 +61,12 @@ interface ContactInquiry {
 
 export default function SuperAdminDashboard() {
     const { data: session } = useSession();
-    const [activeTab, setActiveTab] = useState<'overview' | 'admins' | 'patients' | 'inquiries'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'admins' | 'patients' | 'inquiries' | 'bookings'>('overview');
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [admins, setAdmins] = useState<Admin[]>([]);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [inquiries, setInquiries] = useState<ContactInquiry[]>([]);
+    const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [decryptedData, setDecryptedData] = useState<Record<string, string>>({});
@@ -68,6 +81,7 @@ export default function SuperAdminDashboard() {
             if (activeTab === 'admins') fetchAdmins();
             if (activeTab === 'patients') fetchPatients();
             if (activeTab === 'inquiries') fetchInquiries();
+            if (activeTab === 'bookings') fetchBookings();
         }
     }, [isSuperAdmin, activeTab]);
 
@@ -123,6 +137,21 @@ export default function SuperAdminDashboard() {
             }
         } catch (error) {
             console.error('Failed to fetch inquiries:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchBookings = async () => {
+        try {
+            setLoading(true);
+            const res = await fetch('/api/super-admin/bookings');
+            if (res.ok) {
+                const data = await res.json();
+                setBookings(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch bookings:', error);
         } finally {
             setLoading(false);
         }
@@ -199,6 +228,7 @@ export default function SuperAdminDashboard() {
                     { id: 'overview', label: 'Overview', icon: Activity },
                     { id: 'admins', label: 'Admin Management', icon: Shield },
                     { id: 'patients', label: 'Patient Management', icon: Users },
+                    { id: 'bookings', label: 'Bookings', icon: CreditCard },
                     { id: 'inquiries', label: 'Inquiries', icon: MessageCircle }
                 ].map((tab) => (
                     <button
@@ -436,6 +466,71 @@ export default function SuperAdminDashboard() {
                                             <tr>
                                                 <td colSpan={5} className="p-8 text-center text-slate-500">
                                                     No inquiries found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'bookings' && (
+                    <div className="space-y-6">
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Recent Bookings (All Time)</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                                        <tr>
+                                            <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Order ID</th>
+                                            <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">User</th>
+                                            <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Items</th>
+                                            <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Amount</th>
+                                            <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Status</th>
+                                            <th className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-right">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                        {bookings.length > 0 ? (
+                                            bookings.map((booking) => (
+                                                <tr key={booking.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                    <td className="p-4 text-sm font-mono text-slate-500">
+                                                        #{booking.id.slice(-6).toUpperCase()}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div>
+                                                            <div className="font-semibold text-slate-900 dark:text-white">{booking.user}</div>
+                                                            <div className="text-sm text-slate-500">{booking.email}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate" title={booking.items}>
+                                                        {booking.items}
+                                                    </td>
+                                                    <td className="p-4 text-sm font-bold text-slate-900 dark:text-white">
+                                                        {booking.amount}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase w-fit ${booking.status === 'confirmed' || booking.status === 'completed'
+                                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                                : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                                }`}>
+                                                                {booking.status}
+                                                            </span>
+                                                            <span className="text-xs text-slate-400 capitalize">{booking.paymentStatus}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-right text-sm text-slate-500">
+                                                        {new Date(booking.date).toLocaleDateString()}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={6} className="p-8 text-center text-slate-500">
+                                                    No bookings found.
                                                 </td>
                                             </tr>
                                         )}

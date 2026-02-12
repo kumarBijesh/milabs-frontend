@@ -110,55 +110,59 @@ export default function Header() {
                             )}
                         </Link>
 
-                        {isAuthenticated ? (
-                            <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-slate-200 dark:border-slate-700">
-                                {/* Admin Link for Desktop */}
-                                {['super_admin', 'admin', 'lab_admin'].includes(user?.role || '') && (
-                                    <Link
-                                        href="/super-admin/dashboard"
-                                        className="hidden lg:block text-sm font-bold text-indigo-600 hover:text-indigo-700 mr-2"
-                                    >
-                                        Admin Panel
-                                    </Link>
-                                )}
-
-                                <div className="hidden sm:flex flex-col items-end mr-3">
-                                    <span className="text-sm font-bold text-slate-800 dark:text-white leading-none">
-                                        {user?.name || 'User'}
-                                    </span>
-                                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
-                                        {user?.role?.replace('_', ' ')}
-                                    </span>
-                                </div>
-
-                                <Link
-                                    href={
-                                        user?.role === 'patient' ? '/patient/dashboard' :
-                                            user?.role === 'super_admin' ? '/super-admin/dashboard' :
-                                                user?.role === 'lab_admin' ? '/lab/dashboard' :
-                                                    '/admin/dashboard'
-                                    }
-                                    className="group relative"
-                                >
-                                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-100 to-blue-50 dark:from-blue-900 dark:to-slate-800 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-800 shadow-sm group-hover:shadow-md transition-all overflow-hidden">
-                                        {user?.avatar ? (
-                                            <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            user?.name ? user.name[0].toUpperCase() : <User className="w-5 h-5" />
+                        {mounted && (
+                            <>
+                                {isAuthenticated ? (
+                                    <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-slate-200 dark:border-slate-700">
+                                        {/* Admin Link for Desktop */}
+                                        {['super_admin', 'admin', 'lab_admin'].includes(user?.role || '') && (
+                                            <Link
+                                                href="/super-admin/dashboard"
+                                                className="hidden lg:block text-sm font-bold text-indigo-600 hover:text-indigo-700 mr-2"
+                                            >
+                                                Admin Panel
+                                            </Link>
                                         )}
+
+                                        <div className="hidden sm:flex flex-col items-end mr-3">
+                                            <span className="text-sm font-bold text-slate-800 dark:text-white leading-none">
+                                                {user?.name || 'User'}
+                                            </span>
+                                            <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
+                                                {user?.role?.replace('_', ' ')}
+                                            </span>
+                                        </div>
+
+                                        <Link
+                                            href={
+                                                user?.role === 'patient' ? '/patient/dashboard' :
+                                                    user?.role === 'super_admin' ? '/super-admin/dashboard' :
+                                                        user?.role === 'lab_admin' ? '/lab/dashboard' :
+                                                            '/admin/dashboard'
+                                            }
+                                            className="group relative"
+                                        >
+                                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-100 to-blue-50 dark:from-blue-900 dark:to-slate-800 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-800 shadow-sm group-hover:shadow-md transition-all overflow-hidden">
+                                                {user?.avatar ? (
+                                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    user?.name ? user.name[0].toUpperCase() : <User className="w-5 h-5" />
+                                                )}
+                                            </div>
+                                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+                                        </Link>
+                                        <button onClick={() => { logout(); router.push('/'); }} className="hidden sm:block text-sm text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors font-medium ml-2">
+                                            Logout
+                                        </button>
                                     </div>
-                                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
-                                </Link>
-                                <button onClick={() => { logout(); router.push('/'); }} className="hidden sm:block text-sm text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors font-medium ml-2">
-                                    Logout
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="hidden sm:flex items-center pl-4 border-l border-slate-200 dark:border-slate-700">
-                                <Link href="/auth/login" className="px-6 py-2.5 rounded-full text-sm font-bold text-white bg-blue-600 shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 whitespace-nowrap">
-                                    Log In
-                                </Link>
-                            </div>
+                                ) : (
+                                    <div className="hidden sm:flex items-center pl-4 border-l border-slate-200 dark:border-slate-700">
+                                        <Link href="/auth/login" className="px-6 py-2.5 rounded-full text-sm font-bold text-white bg-blue-600 shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 whitespace-nowrap">
+                                            Log In
+                                        </Link>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

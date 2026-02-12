@@ -23,8 +23,8 @@ These features are fully functional and connected to the real database:
     *   **Stats**: Fetches real counts of users and revenue.
 
 4.  **Database & Backend**:
-    *   **SQLite Setup**: A robust local database is configured.
-    *   **Setup Script**: `setup_backend.bat` automates installation and data seeding.
+    *   **Database Setup**: SQLite (Local file).
+    *   **Setup Script**: `setup.bat` automates schema push and seeding.
     *   **API Routes**: Basic endpoints for bookings, auth, and user management are active.
 
 ---
@@ -65,7 +65,7 @@ If you restart the computer or server, always follow these steps to ensure every
 1.  **Stop any running servers** (Ctrl + C in terminal).
 2.  **Run the Setup Script** (Only needed once or if data feels broken):
     ```powershell
-    .\setup_backend.bat
+    .\setup.bat
     ```
 3.  **Start the Website**:
     ```powershell
