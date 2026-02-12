@@ -194,13 +194,22 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
                                 Facebook
                             </button>
                         </div>
+
+                        {/* Mobile Toggle Link */}
+                        <div className="mt-6 text-center lg:hidden">
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                Don't have an account?{' '}
+                                <button onClick={toggleMode} className="text-blue-600 font-bold hover:underline">Sign Up</button>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 {/* SIGN UP FORM (Right Side) - Hidden on Mobile */}
                 <div className={`
-                    hidden lg:flex lg:absolute lg:top-0 lg:right-0 lg:w-1/2 lg:h-full flex-col justify-center px-12 transition-opacity duration-500
-                    ${!isLogin ? 'lg:opacity-100 lg:z-10' : 'lg:opacity-0 lg:z-0'}
+                    w-full h-full flex-col justify-center px-8 py-8 lg:py-0 transition-opacity duration-500
+                    lg:absolute lg:top-0 lg:right-0 lg:w-1/2 lg:h-full lg:px-12
+                    ${!isLogin ? 'flex opacity-100 z-10' : 'hidden lg:flex lg:opacity-0 lg:z-0'}
                 `}>
                     <div className="max-w-sm mx-auto w-full">
                         <div className="mb-6">
@@ -286,6 +295,14 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
                                 {!isLoading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                             </button>
                         </form>
+
+                        {/* Mobile Toggle Link */}
+                        <div className="mt-6 text-center lg:hidden">
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                Already have an account?{' '}
+                                <button onClick={toggleMode} className="text-blue-600 font-bold hover:underline">Log In</button>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
