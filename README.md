@@ -21,7 +21,7 @@ MiLabs is a modern, decentralized healthcare marketplace connecting patients wit
     ```bash
     npm run dev
     ```
-    Open [http://localhost:3000](http://localhost:3000) to view the application.
+    Open https://milabs-frontend.vercel.app/ to view the application.
 
 ## Key Features Implemented
 
