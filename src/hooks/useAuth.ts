@@ -9,22 +9,20 @@ export const useAuth = () => {
     useEffect(() => {
         if (status === 'authenticated' && session?.user) {
             // Sync NextAuth session with Zustand store
-            // In a real app, you might fetch additional role info here
             login({
-                id: 'google-user', // would come from DB
+                id: (session.user as any).id || 'google-user',
                 name: session.user.name || '',
                 email: session.user.email || '',
-                role: (session.user as any).role || 'patient', // Role from session callback
+                role: (session.user as any).role || 'patient',
                 isVerified: true,
                 avatar: session.user.image || undefined
             });
         }
-        // Removed auto-logout to allow manual Zustand mock login alongside NextAuth
     }, [session, status, login]);
 
     // If we have a manual Zustand login (demo mode), prioritize that, specific for dev
     const activeUser = user || (session?.user ? {
-        id: 'google-user',
+        id: (session.user as any).id || 'google-user',
         name: session.user.name as string,
         email: session.user.email as string,
         role: (session.user as any).role || 'patient',

@@ -116,11 +116,20 @@ export default function Header() {
                                 {['super_admin', 'admin', 'lab_admin'].includes(user?.role || '') && (
                                     <Link
                                         href="/super-admin/dashboard"
-                                        className="hidden lg:block text-sm font-bold text-indigo-600 hover:text-indigo-700 mr-4"
+                                        className="hidden lg:block text-sm font-bold text-indigo-600 hover:text-indigo-700 mr-2"
                                     >
                                         Admin Panel
                                     </Link>
                                 )}
+
+                                <div className="hidden sm:flex flex-col items-end mr-3">
+                                    <span className="text-sm font-bold text-slate-800 dark:text-white leading-none">
+                                        {user?.name || 'User'}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
+                                        {user?.role?.replace('_', ' ')}
+                                    </span>
+                                </div>
 
                                 <Link
                                     href={
@@ -140,7 +149,7 @@ export default function Header() {
                                     </div>
                                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
                                 </Link>
-                                <button onClick={() => { logout(); router.push('/'); }} className="hidden sm:block text-sm text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors font-medium">
+                                <button onClick={() => { logout(); router.push('/'); }} className="hidden sm:block text-sm text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors font-medium ml-2">
                                     Logout
                                 </button>
                             </div>
