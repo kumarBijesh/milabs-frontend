@@ -3,9 +3,11 @@ import GoogleProvider from 'next-auth/providers/google';
 import FacebookProvider from 'next-auth/providers/facebook';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
+    adapter: PrismaAdapter(prisma),
     providers: [
         CredentialsProvider({
             name: 'Credentials',
@@ -31,11 +33,17 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async session({ session, token }) {
-            // Ensure session user has role for Navbar logic
+        async session({ session, token, user }) {
+            // When using JWT strategy, 'user' is undefined, and we use 'token'
+            // When using database strategy (default with adapter), 'token' is undefined and we use 'user'
             if (session?.user) {
-                (session.user as any).role = token.role || 'patient';
-                (session.user as any).id = token.sub || '';
+                if (token) {
+                    (session.user as any).role = token.role || 'patient';
+                    (session.user as any).id = token.sub || '';
+                } else if (user) {
+                    (session.user as any).role = (user as any).role || 'patient';
+                    (session.user as any).id = user.id;
+                }
             }
             return session;
         },
@@ -45,6 +53,9 @@ export const authOptions: NextAuthOptions = {
             }
             return token;
         }
+    },
+    session: {
+        strategy: 'jwt',
     },
     pages: {
         signIn: '/auth/login',

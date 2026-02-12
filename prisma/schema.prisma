@@ -11,20 +11,59 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
+  emailVerified DateTime?
+  image         String?
   password      String?
   role          String    @default("patient") // super_admin, admin, lab_admin, patient
   phone         String?
   address       String?
-  walletBalance Float     @default(0) // Added to match seed
+  walletBalance Float     @default(0)
   avatar        String?
   isVerified    Boolean   @default(false)
-  encryptedData String?   // Added to match seed
+  encryptedData String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
   // Relations
+  accounts      Account[]
+  sessions      Session[]
   orders        Order[]
   verificationToken String?
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Lab {
