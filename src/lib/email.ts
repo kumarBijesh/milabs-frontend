@@ -60,3 +60,22 @@ export const getBookingSuccessEmail = (orderId: string, name: string, amount: st
         </div>
     `;
 };
+
+export const getVerificationEmail = (name: string, token: string) => {
+    const url = `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`;
+
+    return `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #2563eb;">Verify your Email</h2>
+            <p>Hi ${name},</p>
+            <p>Welcome to MiLabs! Please verify your email address to activate your account and access all features.</p>
+            
+            <a href="${url}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold;">Verify Email Address</a>
+            
+            <p>Or verify using this link:</p>
+            <p><a href="${url}">${url}</a></p>
+            
+            <p style="font-size: 12px; color: #666;">This link will expire in 24 hours.</p>
+        </div>
+    `;
+};

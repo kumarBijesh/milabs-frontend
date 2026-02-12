@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Eye, EyeOff, Check, ArrowRight, User, Mail, Lock, ShieldCheck } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 interface SlidingAuthPageProps {
     initialMode?: 'login' | 'signup';
@@ -27,6 +28,8 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
     const router = useRouter();
     const searchParams = useSearchParams();
     const { login, isAuthenticated } = useAuth();
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
     // Get callback URL or default to home
     const callbackUrl = searchParams.get('callbackUrl') || '/';
@@ -79,35 +82,31 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
 
     const handleSignupSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!captchaToken) {
+            alert('Please complete the CAPTCHA verification');
+            return;
+        }
+
         setIsLoading(true);
         try {
             const res = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(signupData),
+                body: JSON.stringify({ ...signupData, captchaToken }),
             });
 
             const data = await res.json();
 
             if (!res.ok) {
                 alert(data.error || 'Signup failed');
+                recaptchaRef.current?.reset();
+                setCaptchaToken(null);
                 return;
             }
 
-            // Auto-login after signup
-            const result = await signIn('credentials', {
-                email: signupData.email,
-                password: signupData.password,
-                redirect: false
-            });
-
-            if (result?.error) {
-                alert('Account created, but auto-login failed. Please sign in manually.');
-                toggleMode();
-            } else {
-                router.push(callbackUrl);
-                router.refresh();
-            }
+            alert('Account created! Please check your email to verify your account before logging in.');
+            toggleMode(); // Switch to login
 
         } catch (error) {
             console.error(error);
@@ -120,11 +119,11 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
     return (
         <div className="bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center font-sans px-4 py-12 relative min-h-[calc(100vh-80px)]">
 
-            <div className="w-full max-w-[1000px] h-[600px] relative bg-white dark:bg-zinc-900/50 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-zinc-800/50 backdrop-blur-sm">
+            <div className="w-full max-w-[1000px] h-auto lg:h-[650px] relative bg-white dark:bg-zinc-900/50 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-zinc-800/50 backdrop-blur-sm">
 
                 {/* LOGIN FORM (Left Side) - When Active */}
                 <div className={`
-                    w-full h-full flex flex-col justify-center px-8 transition-opacity duration-500
+                    w-full h-full flex flex-col justify-center px-8 transition-opacity duration-500 py-8 lg:py-0
                     lg:absolute lg:top-0 lg:left-0 lg:w-1/2 lg:px-12
                     ${isLogin ? 'opacity-100 z-10' : 'hidden lg:flex lg:opacity-0 lg:z-0'}
                 `}>
@@ -268,10 +267,20 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
                                 </div>
                             </div>
 
+                            {/* CAPTCHA - Only visible in Signup Mode */}
+                            <div className="py-2">
+                                <ReCAPTCHA
+                                    ref={recaptchaRef}
+                                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'} // Use test key fallback
+                                    onChange={(token) => setCaptchaToken(token)}
+                                    theme="light"
+                                />
+                            </div>
+
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-zinc-200 text-white dark:text-black font-bold py-3 rounded-xl transition-all mt-6 flex items-center justify-center gap-2 group shadow-lg shadow-blue-500/20"
+                                className="w-full bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-zinc-200 text-white dark:text-black font-bold py-3 rounded-xl transition-all mt-4 flex items-center justify-center gap-2 group shadow-lg shadow-blue-500/20"
                             >
                                 {isLoading ? 'Creating Account...' : 'Sign Up'}
                                 {!isLoading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
