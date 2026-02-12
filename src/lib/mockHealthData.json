@@ -1,0 +1,20 @@
+[
+    {
+        "title": "Hemoglobin",
+        "value": "13.5 g/dL",
+        "status": "normal",
+        "date": "2024-03-01"
+    },
+    {
+        "title": "Cholesterol",
+        "value": "210 mg/dL",
+        "status": "warning",
+        "date": "2024-03-01"
+    },
+    {
+        "title": "Vitamin D",
+        "value": "25 ng/mL",
+        "status": "low",
+        "date": "2024-02-15"
+    }
+]

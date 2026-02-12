@@ -1,0 +1,10 @@
+[
+    {
+        "id": 1,
+        "user": "Test User",
+        "lab": "Test Lab",
+        "test": "COVID-19 Test",
+        "date": "2024-03-24",
+        "status": "Completed"
+    }
+]

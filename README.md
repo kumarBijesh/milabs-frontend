@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MiLabs - Healthcare Marketplace
+
+## Overview
+MiLabs is a modern, decentralized healthcare marketplace connecting patients with verified labs for seamless test booking and report management.
+
+## Tech Stack
+- **Frontend**: Next.js 15 (App Router), React 19, Tailwind CSS v4
+- **Styling**: Custom Design System with Glassmorphism & Gradients
+- **State Management**: Zustand
+- **Backend (Mock/API)**: Next.js API Routes (Serverless Functions)
+- **Database Models**: Mongoose (MongoDB) schemas included in `src/models`
 
 ## Getting Started
 
-First, run the development server:
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features Implemented
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Public Website
+- **Home Page**: Modern hero section, categories, trending deals, and app promo.
+- **Deals Page**: Browse and filter health packages.
+- **Labs Page**: List of partner labs with ratings and verification status.
+- **Auth**: Beautiful login/signup pages with role selection (Patient vs Lab).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Patient Panel (`/patient`)
+- **Dashboard**: Overview of health stats and recent activity.
+- **Bookings**: Manage upcoming and past appointments.
+- **Reports**: Access and download medical reports.
+- **Profile**: Manage personal details and settings.
 
-## Learn More
+### Admin Panel (`/admin`)
+- **Dashboard**: High-level platform stats (revenue, users, labs).
+- **Management**: Placeholders for managing users, labs, and payments.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
+- `src/app`: Next.js App Router pages and API routes.
+- `src/components`: UI components organized by feature (home, deals, layout).
+- `src/hooks`: Custom hooks (useAuth, useCurrency).
+- `src/models`: Mongoose schemas for MongoDB.
+- `src/lib`: Utilities and mock data.
+- `src/store`: Global state stores.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Next Steps
+- Connect to a real MongoDB database.
+- Implement real authentication using NextAuth.js.
+- Build out the Lab Partner dashboard.
+- Integrate a payment gateway (Stripe/Razorpay).

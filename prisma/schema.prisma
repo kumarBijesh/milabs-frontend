@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?
+  role          String    @default("patient") // super_admin, admin, lab_admin, patient
+  phone         String?
+  address       String?
+  walletBalance Float     @default(0) // Added to match seed
+  avatar        String?
+  isVerified    Boolean   @default(false)
+  encryptedData String?   // Added to match seed
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  orders        Order[]
+  verificationToken String?
+}
+
+model Lab {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String?  @unique
+  description String?
+  address     String?
+  city        String?
+  state       String?  // Added
+  pincode     String?  // Added
+  phone       String?  // Added
+  email       String?  // Added
+  rating      Float    @default(0)
+  image       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tests       Test[]
+  orders      Order[]
+  packages    Package[] // Added reverse relation if needed, though seed links package to labId
+}
+
+model Test {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String?  @unique
+  description String?
+  price       Float
+  originalPrice Float? // Added
+  discount    Float?   // Added
+  duration    String?
+  preparation String?
+  category    String?  // Health Checkup, Blood Test, etc.
+  tat         String?  // Turnaround Time
+  labId       String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  lab         Lab      @relation(fields: [labId], references: [id])
+  orderItems  OrderItem[]
+  packageTests PackageTest[]
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String?  @unique
+  description String?
+  price       Float
+  originalPrice Float? // Added
+  discount    Float?   // Added
+  image       String?  // Added
+  labId       String?  // Added to match seed
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lab         Lab?     @relation(fields: [labId], references: [id])
+  orderItems  OrderItem[]
+  packageTests PackageTest[]
+}
+
+model PackageTest {
+  id        String   @id @default(cuid())
+  packageId String
+  testId    String
+  
+  package   Package  @relation(fields: [packageId], references: [id])
+  test      Test     @relation(fields: [testId], references: [id])
+
+  @@unique([packageId, testId])
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  userId        String?
+  labId         String?
+  totalAmount   Float
+  status        String    @default("pending") // pending, confirmed, completed, cancelled
+  paymentStatus String    @default("pending") // pending, paid, failed
+  paymentId     String?
+  bookingDate   DateTime
+  slotTime      String?
+  reportUrl     String?
+  paymentMethod String?   // Added
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User?     @relation(fields: [userId], references: [id])
+  lab           Lab?      @relation(fields: [labId], references: [id])
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  testId    String?
+  packageId String?
+  quantity  Int      @default(1)
+  price     Float
+
+  // Relations
+  order     Order    @relation(fields: [orderId], references: [id])
+  test      Test?    @relation(fields: [testId], references: [id])
+  package   Package? @relation(fields: [packageId], references: [id])
+}
+
+model ContactInquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    String   @default("new") // new, read, replied
+  createdAt DateTime @default(now())
+}

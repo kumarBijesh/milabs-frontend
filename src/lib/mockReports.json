@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "title": "Full Blood Count",
+        "doctor": "Dr. Sarah",
+        "lab": "City Diagnostics",
+        "date": "2024-03-01",
+        "status": "Released",
+        "downloadUrl": "#"
+    },
+    {
+        "id": 2,
+        "title": "Lipid Profile",
+        "doctor": "Dr. Mike",
+        "lab": "HealthCare Plus",
+        "date": "2024-02-15",
+        "status": "Released",
+        "downloadUrl": "#"
+    },
+    {
+        "id": 3,
+        "title": "Vitamin Panel",
+        "doctor": "Self",
+        "lab": "Wellness Labs",
+        "date": "2024-01-20",
+        "status": "Released",
+        "downloadUrl": "#"
+    }
+]

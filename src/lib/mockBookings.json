@@ -1,0 +1,38 @@
+[
+    {
+        "id": "1",
+        "labName": "City Lab Diagnostics",
+        "testName": "Full Body Checkup",
+        "date": "2024-03-15",
+        "status": "Completed",
+        "amount": 1499,
+        "reportUrl": "#"
+    },
+    {
+        "id": "2",
+        "labName": "HealthCare Plus",
+        "testName": "Vitamin D3",
+        "date": "2024-03-18",
+        "status": "Pending",
+        "amount": 599,
+        "reportUrl": null
+    },
+    {
+        "id": "3",
+        "labName": "MedLife Labs",
+        "testName": "Blood Sugar Fasting",
+        "date": "2024-03-20",
+        "status": "Confirmed",
+        "amount": 250,
+        "reportUrl": null
+    },
+    {
+        "id": "4",
+        "labName": "Wellness Center",
+        "testName": "Complete CBC",
+        "date": "2024-03-25",
+        "status": "Scheduled",
+        "amount": 450,
+        "reportUrl": null
+    }
+]
