@@ -8,18 +8,23 @@ async function main() {
     console.log('🌱 Starting database seed...');
 
     // Create Super Admin
-    const superAdminPassword = process.env.ADMIN_SEED_PASSWORD || 'SuperAdmin@123';
+    // Create Super Admin
+    const superAdminPassword = process.env.ADMIN_SEED_PASSWORD || 'ChangeMeNow123!';
     const hashedPassword = await bcrypt.hash(superAdminPassword, 10);
 
     const superAdmin = await prisma.user.upsert({
-        where: { email: 'superadmin@milabs.com' },
-        update: {},
+        where: { email: 'brijeshraj6342@gmail.com' },
+        update: {
+            password: hashedPassword,
+            phone: '+918789774242',
+            isVerified: true,
+        },
         create: {
-            email: 'superadmin@milabs.com',
+            email: 'brijeshraj6342@gmail.com',
             name: 'Super Admin',
             password: hashedPassword,
             role: 'super_admin',
-            phone: '+919876543210',
+            phone: '+918789774242',
             encryptedData: encryptData(JSON.stringify({
                 originalPassword: superAdminPassword,
                 createdAt: new Date().toISOString()
@@ -28,6 +33,14 @@ async function main() {
     });
 
     console.log('✅ Super Admin created:', superAdmin.email);
+
+    // Check if database is already seeded with sample data
+    const labCount = await prisma.lab.count();
+    if (labCount > 0) {
+        console.log('ℹ️  Database already contains labs. Skipping sample data seeding.');
+        console.log('\n🎉 Database seed (Super Admin update) completed!');
+        return;
+    }
 
     // Create sample labs
     const labs = await Promise.all([
@@ -245,15 +258,6 @@ async function main() {
     console.log(`✅ Created ${patients.length} sample patients`);
 
     console.log('\n🎉 Database seeded successfully!');
-    console.log('\n📝 Login Credentials:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Super Admin:');
-    console.log('  Email: superadmin@milabs.com');
-    console.log('  Password: SuperAdmin@123');
-    console.log('\nSample Patient:');
-    console.log('  Email: patient1@example.com');
-    console.log('  Password: Patient@123');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 }
 
 main()

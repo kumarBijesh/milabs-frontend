@@ -32,6 +32,10 @@ model User {
   verificationToken String?
   otp           String?   // For Admin Login
   otpExpires    DateTime?
+  
+  // RBAC for Lab Admins
+  labId         String?   @db.ObjectId
+  lab           Lab?      @relation(fields: [labId], references: [id])
 }
 
 model Account {
@@ -92,6 +96,7 @@ model Lab {
   tests       Test[]
   orders      Order[]
   packages    Package[] // Added reverse relation if needed, though seed links package to labId
+  users       User[]    // Admins/Staff associated with this lab
 }
 
 model Test {

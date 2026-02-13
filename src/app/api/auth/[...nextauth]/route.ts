@@ -29,17 +29,21 @@ export const authOptions: NextAuthOptions = {
                 // Admin OTP Check
                 // Role-Based Access Control logic for login
                 if (['super_admin', 'admin', 'lab_admin', 'marketing_admin', 'support_admin', 'viewer_admin'].includes(user.role)) {
-                    const otp = (credentials as any).otp;
+                    const otp = (credentials as any).otp?.toString();
 
                     // If OTP provided, Verify it
                     if (otp) {
                         if (user.otp !== otp || !user.otpExpires || new Date() > user.otpExpires) {
                             throw new Error("Invalid or expired OTP");
                         }
-                        // Clear OTP (security)
+                        // Clear OTP (security) and mark as verified
                         await prisma.user.update({
                             where: { id: user.id },
-                            data: { otp: null, otpExpires: null }
+                            data: {
+                                otp: null,
+                                otpExpires: null,
+                                isVerified: true
+                            }
                         });
                         return user;
                     }
