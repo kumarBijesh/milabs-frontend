@@ -64,10 +64,12 @@ const ADMIN_ROLES = [
     },
 ];
 
-export default function AdminLoginPage() {
+const AdminLoginPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [otp, setOtp] = useState('');
+    const [showOtp, setShowOtp] = useState(false);
     const [selectedRole, setSelectedRole] = useState<AdminRole>(null);
     const router = useRouter();
     const { login } = useAuth();
@@ -79,29 +81,67 @@ export default function AdminLoginPage() {
         setIsLoading(true);
 
         try {
-            const result = await signIn('credentials', {
+            // First Attempt: Standard Credentials
+            // Second Attempt (if showOtp): Include OTP
+            const credentials: any = {
                 email,
                 password,
                 redirect: false
-            });
+            };
+
+            if (showOtp) {
+                credentials.otp = otp;
+            }
+
+            const result = await signIn('credentials', credentials);
 
             if (result?.error) {
+                // If backend signals OTP required
+                if (result.error === 'OTP_REQUIRED') {
+                    setShowOtp(true);
+                    toast.message('Verification Code Sent', {
+                        description: `We've sent an OTP to ${email}. Please verify to continue.`
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+
                 toast.error(result.error === 'CredentialsSignin' ? 'Invalid email or password' : result.error);
+                setIsLoading(false);
                 return;
             }
 
             toast.success('Login successful!');
-
-            // The middleware or an effect will handle redirection, 
-            // but we can do a quick check here too if we want immediate feedback
-            // For now, let's refresh to get the new session
             window.location.reload();
 
         } catch (error) {
             console.error('Admin login error:', error);
             toast.error('An unexpected error occurred');
-        } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (!email || !password) return;
+        try {
+            toast.loading('Resending OTP...');
+            const res = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+
+            toast.dismiss();
+
+            if (res.ok) {
+                toast.success('New OTP sent successfully');
+            } else {
+                toast.error(data.error || 'Failed to resend OTP');
+            }
+        } catch (error) {
+            toast.dismiss();
+            toast.error('Network error');
         }
     };
 
@@ -163,7 +203,7 @@ export default function AdminLoginPage() {
                     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="flex flex-col items-center mb-8 text-center">
                             <button
-                                onClick={() => setSelectedRole(null)}
+                                onClick={() => { setSelectedRole(null); setShowOtp(false); setOtp(''); }}
                                 className="absolute top-0 left-0 p-2 text-zinc-500 hover:text-white transition-colors flex items-center gap-1 text-xs"
                             >
                                 <ArrowLeft className="w-3 h-3" /> Back
@@ -173,49 +213,80 @@ export default function AdminLoginPage() {
                                 {activeRoleConfig && <activeRoleConfig.icon className={`w-8 h-8 ${activeRoleConfig.color}`} />}
                             </div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">{activeRoleConfig?.title} Login</h1>
-                            <p className="text-zinc-500 text-sm mt-2">Enter credentials to access {activeRoleConfig?.title} panel</p>
+                            <p className="text-zinc-500 text-sm mt-2">
+                                {showOtp ? 'Enter verification code sent to your email' : `Enter credentials to access ${activeRoleConfig?.title} panel`}
+                            </p>
                         </div>
 
                         <form onSubmit={handleLogin} className="space-y-5">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Email Address</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-blue-500 transition-colors">
-                                        <Mail className="h-5 w-5" />
-                                    </div>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-3 bg-black/40 border border-zinc-800 rounded-xl text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all sm:text-sm"
-                                        placeholder={`${selectedRole}@milabs.com`}
-                                        required
-                                    />
-                                </div>
-                            </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Password</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-blue-500 transition-colors">
-                                        <Lock className="h-5 w-5" />
+                            {!showOtp ? (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Email Address</label>
+                                        <div className="relative group">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-blue-500 transition-colors">
+                                                <Mail className="h-5 w-5" />
+                                            </div>
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                className="block w-full pl-10 pr-3 py-3 bg-black/40 border border-zinc-800 rounded-xl text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all sm:text-sm"
+                                                placeholder={`${selectedRole}@milabs.com`}
+                                                required
+                                            />
+                                        </div>
                                     </div>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-3 bg-black/40 border border-zinc-800 rounded-xl text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all sm:text-sm"
-                                        placeholder="••••••••••••"
-                                        required
-                                    />
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Password</label>
+                                        <div className="relative group">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-blue-500 transition-colors">
+                                                <Lock className="h-5 w-5" />
+                                            </div>
+                                            <input
+                                                type="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                className="block w-full pl-10 pr-3 py-3 bg-black/40 border border-zinc-800 rounded-xl text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all sm:text-sm"
+                                                placeholder="••••••••••••"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                                    <div className="flex justify-center">
+                                        <input
+                                            type="text"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            className="block w-full text-center tracking-[1em] text-2xl font-bold py-4 bg-black/40 border border-zinc-800 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                                            placeholder="••••••"
+                                            maxLength={6}
+                                            required
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="text-center">
+                                        <button
+                                            type="button"
+                                            onClick={handleResendOtp}
+                                            className="text-xs text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+                                        >
+                                            Resend Verification Code
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <button
                                 type="submit"
                                 disabled={isLoading}
                                 className={cn(
-                                    "w-full flex justify-center items-center py-3 px-4 rounded-xl text-sm font-semibold text-white transition-all shadow-lg",
+                                    "w-full flex justify-center items-center py-3 px-4 rounded-xl text-sm font-semibold text-white transition-all shadow-lg mt-2",
                                     isLoading ? "bg-zinc-800 cursor-not-allowed" :
                                         activeRoleConfig?.id === 'super_admin' ? "bg-yellow-600 hover:bg-yellow-500" :
                                             activeRoleConfig?.id === 'lab_admin' ? "bg-purple-600 hover:bg-purple-500" :
@@ -226,10 +297,10 @@ export default function AdminLoginPage() {
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Authenticating...
+                                        {showOtp ? "Verifying..." : "Authenticating..."}
                                     </>
                                 ) : (
-                                    "Access Dashboard"
+                                    showOtp ? "Verify & Login" : "Access Dashboard"
                                 )}
                             </button>
                         </form>
@@ -238,4 +309,6 @@ export default function AdminLoginPage() {
             </div>
         </div>
     );
-}
+};
+
+export default AdminLoginPage;

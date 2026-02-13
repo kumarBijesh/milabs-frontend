@@ -30,6 +30,8 @@ model User {
   sessions      Session[]
   orders        Order[]
   verificationToken String?
+  otp           String?   // For Admin Login
+  otpExpires    DateTime?
 }
 
 model Account {

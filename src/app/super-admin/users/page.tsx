@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, UserPlus, MoreVertical, Shield, User, FlaskConical } from 'lucide-react';
+import { Search, UserPlus, MoreVertical, Shield, User, FlaskConical, Trash2, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { toast } from 'sonner';
 
 // Mock Data
-const MOCK_USERS = [
+const INITIAL_USERS = [
     { id: 1, name: 'John Doe', email: 'john@example.com', role: 'patient', date: '2024-03-01', status: 'Active' },
     { id: 2, name: 'Sarah Smith', email: 'sarah@lab.com', role: 'lab_admin', date: '2024-02-15', status: 'Active' },
     { id: 3, name: 'Admin User', email: 'admin@milabs.com', role: 'admin', date: '2024-01-20', status: 'Active' },
@@ -15,15 +16,42 @@ const MOCK_USERS = [
 ];
 
 export default function UsersManagement() {
+    const [users, setUsers] = useState(INITIAL_USERS);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState('all');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const filteredUsers = MOCK_USERS.filter(user => {
+    // Form State
+    const [newUser, setNewUser] = useState({ name: '', email: '', role: 'patient' });
+
+    const filteredUsers = users.filter(user => {
         const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = filterRole === 'all' || user.role === filterRole;
         return matchesSearch && matchesRole;
     });
+
+    const handleDelete = (id: number) => {
+        if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            setUsers(prev => prev.filter(u => u.id !== id));
+            toast.success('User deleted successfully');
+        }
+    };
+
+    const handleAddUser = (e: React.FormEvent) => {
+        e.preventDefault();
+        const id = Math.max(...users.map(u => u.id)) + 1;
+        const user = {
+            id,
+            ...newUser,
+            date: new Date().toISOString().split('T')[0],
+            status: 'Active'
+        };
+        setUsers([user, ...users]);
+        setIsAddModalOpen(false);
+        setNewUser({ name: '', email: '', role: 'patient' });
+        toast.success('User added successfully');
+    };
 
     const getRoleBadge = (role: string) => {
         switch (role) {
@@ -35,13 +63,13 @@ export default function UsersManagement() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">User Management</h1>
                     <p className="text-slate-500 text-sm">Manage all platform users and roles.</p>
                 </div>
-                <Button>
+                <Button onClick={() => setIsAddModalOpen(true)}>
                     <UserPlus className="w-4 h-4 mr-2" /> Add User
                 </Button>
             </div>
@@ -63,8 +91,8 @@ export default function UsersManagement() {
                             key={role}
                             onClick={() => setFilterRole(role)}
                             className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors border ${filterRole === role
-                                    ? 'bg-blue-600 text-white border-blue-600'
-                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
                                 }`}
                         >
                             {role.replace('_', ' ')}
@@ -106,15 +134,19 @@ export default function UsersManagement() {
                                     <td className="p-4 text-sm text-slate-600 dark:text-slate-400">{user.date}</td>
                                     <td className="p-4">
                                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${user.status === 'Active'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'
                                             }`}>
                                             {user.status}
                                         </span>
                                     </td>
                                     <td className="p-4 text-right">
-                                        <button className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100">
-                                            <MoreVertical className="w-4 h-4" />
+                                        <button
+                                            onClick={() => handleDelete(user.id)}
+                                            className="text-slate-400 hover:text-red-600 p-1 rounded-md hover:bg-red-50 transition-colors"
+                                            title="Delete User"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     </td>
                                 </tr>
@@ -122,12 +154,48 @@ export default function UsersManagement() {
                         </tbody>
                     </table>
                 </div>
-                {filteredUsers.length === 0 && (
-                    <div className="p-8 text-center text-slate-500 text-sm">
-                        No users found matching your filters.
-                    </div>
-                )}
             </div>
+
+            {/* Add User Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Add New User</h2>
+                            <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddUser} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
+                                <Input required placeholder="John Doe" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
+                                <Input required type="email" placeholder="john@example.com" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
+                                <select
+                                    className="flex h-11 w-full rounded-xl border border-slate-200 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={newUser.role}
+                                    onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                                >
+                                    <option value="patient">Patient</option>
+                                    <option value="lab_admin">Lab Admin</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="super_admin">Super Admin</option>
+                                </select>
+                            </div>
+                            <div className="pt-4 flex gap-3">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+                                <Button type="submit" className="flex-1">Create User</Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

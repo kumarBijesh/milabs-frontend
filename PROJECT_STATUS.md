@@ -71,4 +71,4 @@ If you restart the computer or server, always follow these steps to ensure every
 
 **Login Credentials for Testing:**
 *   **Patient**: (User's personal email after verification)
-*   **Super Admin**: `superadmin@milabs.com` / `SuperAdmin@123` (or set manually in MongoDB)
+*   **Super Admin**: `brijeshraj6342@gmail.com` / `Brijesh@123`

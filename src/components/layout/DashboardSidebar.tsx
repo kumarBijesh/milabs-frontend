@@ -23,7 +23,7 @@ export default function DashboardSidebar({ title, items, userEmail, userName, us
     const pathname = usePathname();
 
     return (
-        <div className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-white h-screen fixed left-0 top-0 overflow-y-auto">
+        <div className="flex flex-col h-full w-full bg-slate-900 border-r border-slate-800 text-white overflow-y-auto">
             <div className="p-6 border-b border-slate-800">
                 <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
                     {title}

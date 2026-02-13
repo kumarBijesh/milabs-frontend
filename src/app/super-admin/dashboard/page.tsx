@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Building2, CreditCard, Shield, Plus, Edit, Trash2, Eye, Activity, Search, Filter, Key, Lock, Unlock, MessageCircle, CheckCircle, Clock } from 'lucide-react';
+import { Users, Building2, CreditCard, Shield, Activity, Search, Edit, Trash2, Eye, Key, Lock, Unlock, MessageCircle, CheckCircle, Clock } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -87,10 +87,17 @@ export default function SuperAdminDashboard() {
 
     const fetchStats = async () => {
         try {
-            const res = await fetch('/api/super-admin/dashboard?type=stats');
+            const res = await fetch('/api/admin/stats');
             if (res.ok) {
                 const data = await res.json();
-                setStats(data);
+                setStats({
+                    totalUsers: data.users.total,
+                    totalAdmins: (data.users.breakdown.admin || 0) + (data.users.breakdown.super_admin || 0) + (data.users.breakdown.lab_admin || 0),
+                    totalPatients: data.users.breakdown.patient || 0,
+                    totalLabAdmins: data.users.breakdown.lab_admin || 0,
+                    totalBookings: data.platform.bookings,
+                    totalRevenue: data.platform.revenue
+                });
             }
         } catch (error) {
             console.error('Failed to fetch stats:', error);
@@ -255,9 +262,11 @@ export default function SuperAdminDashboard() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
                                 { label: 'Total Users', value: stats?.totalUsers || 0, icon: Users, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/20' },
-                                { label: 'Total Admins', value: stats?.totalAdmins || 0, icon: Shield, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/20' },
                                 { label: 'Total Patients', value: stats?.totalPatients || 0, icon: Users, color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/20' },
-                                { label: 'Total Revenue', value: `₹${((stats?.totalRevenue || 0) / 1000).toFixed(1)}k`, icon: CreditCard, color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/20' },
+                                { label: 'Total Admins', value: stats?.totalAdmins || 0, icon: Shield, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/20' },
+                                { label: 'Lab Admins', value: stats?.totalLabAdmins || 0, icon: Building2, color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/20' },
+                                { label: 'Total Bookings', value: stats?.totalBookings || 0, icon: Activity, color: 'text-pink-500', bg: 'bg-pink-100 dark:bg-pink-900/20' },
+                                { label: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, icon: CreditCard, color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/20' },
                             ].map((stat, i) => (
                                 <div key={i} className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center hover:shadow-md transition-shadow">
                                     <div className={`p-4 rounded-xl ${stat.bg} ${stat.color} mr-4`}>

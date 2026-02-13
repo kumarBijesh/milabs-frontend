@@ -13,7 +13,9 @@ export default function DashboardLayoutWrapper({ children, Sidebar }: DashboardL
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex text-slate-800 dark:text-slate-100">
-            {Sidebar}
+            <div className="hidden md:block w-64 h-screen fixed left-0 top-0 z-30 shadow-xl border-r border-slate-800">
+                {Sidebar}
+            </div>
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col md:ml-64 relative bg-slate-50 dark:bg-slate-900 min-h-screen">

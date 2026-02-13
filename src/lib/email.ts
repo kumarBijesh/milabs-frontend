@@ -61,6 +61,23 @@ export const getBookingSuccessEmail = (orderId: string, name: string, amount: st
     `;
 };
 
+export const getOtpEmail = (name: string, otp: string) => {
+    return `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px;">
+            <h2 style="color: #2563eb; text-align: center;">Admin Access Verification</h2>
+            <p>Hi ${name},</p>
+            <p>You are attempting to log in to the MiLabs Admin Dashboard.</p>
+            <p>Please use the following OTP to complete your login:</p>
+            
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #2563eb;">${otp}</span>
+            </div>
+            
+            <p style="font-size: 12px; color: #666; text-align: center;">This OTP is valid for 10 minutes. Do not share this code with anyone.</p>
+        </div>
+    `;
+};
+
 export const getVerificationEmail = (name: string, token: string) => {
     const url = `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`;
 

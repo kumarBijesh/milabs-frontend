@@ -5,6 +5,8 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
+import { sendEmail, getOtpEmail } from '@/lib/email';
+import crypto from 'crypto';
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
@@ -20,12 +22,47 @@ export const authOptions: NextAuthOptions = {
                 const user = await prisma.user.findUnique({ where: { email: credentials.email } });
                 if (!user || !user.password) return null;
 
-                if (!user.isVerified) {
+                // Only require verification for patients (to prevent admin lockout if not verified)
+                if (!user.isVerified && user.role === 'patient') {
                     throw new Error("Please verify your email first.");
                 }
 
                 const isValid = await bcrypt.compare(credentials.password, user.password);
-                return isValid ? user : null;
+                if (!isValid) return null;
+
+                // Admin OTP Check
+                if (['super_admin', 'admin', 'lab_admin', 'marketing_admin', 'support_admin', 'viewer_admin'].includes(user.role)) {
+                    const otp = (credentials as any).otp;
+
+                    // If OTP provided, Verify it
+                    if (otp) {
+                        if (user.otp !== otp || !user.otpExpires || new Date() > user.otpExpires) {
+                            throw new Error("Invalid or expired OTP");
+                        }
+                        // Clear OTP (security)
+                        await prisma.user.update({
+                            where: { id: user.id },
+                            data: { otp: null, otpExpires: null }
+                        });
+                        return user;
+                    }
+
+                    // If OTP NOT provided, Generate & Send
+                    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { otp: newOtp, otpExpires }
+                    });
+
+                    const html = getOtpEmail(user.name || 'Admin', newOtp);
+                    await sendEmail(user.email!, 'MiLabs Admin OTP Login', html);
+
+                    throw new Error("OTP_REQUIRED");
+                }
+
+                return user;
             }
         }),
         GoogleProvider({
