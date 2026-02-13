@@ -17,6 +17,7 @@ model User {
   role          String    @default("patient") // super_admin, admin, lab_admin, patient
   phone         String?
   address       String?
+  pincode       String?  // Added
   walletBalance Float     @default(0)
   avatar        String?
   isVerified    Boolean   @default(false)
@@ -80,6 +81,7 @@ model Lab {
   email       String?  // Added
   rating      Float    @default(0)
   image       String?
+  isVerified  Boolean  @default(false)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

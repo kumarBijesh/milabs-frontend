@@ -8,7 +8,7 @@ async function main() {
     console.log('🌱 Starting database seed...');
 
     // Create Super Admin
-    const superAdminPassword = 'SuperAdmin@123';
+    const superAdminPassword = process.env.ADMIN_SEED_PASSWORD || 'SuperAdmin@123';
     const hashedPassword = await bcrypt.hash(superAdminPassword, 10);
 
     const superAdmin = await prisma.user.upsert({

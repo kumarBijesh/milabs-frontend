@@ -13,19 +13,22 @@ These features are fully functional and connected to the real database:
     *   **Profile**: Allows viewing user profile data.
     *   **Safety Fix**: The "crash" issue has been resolved.
 
-2.  **Authentication System**:
-    *   **Patient Login**: Works with standard email/password or social providers.
-    *   **Super Admin Login**: Works with secure credentials (seeded in database).
-    *   **Redirects**: Users are sent to the correct dashboard based on their role.
+2.  **Authentication System (Enhanced)**:
+    *   **ReCAPTCHA Protection**: Google ReCAPTCHA v2 protects the signup form from bots.
+    *   **Email Verification**: Users must verify their Gmail address (via a secure token link) before they can log in.
+    *   **Social Auth**: Google and Facebook login integration is active.
+    *   **Mobile Ready**: All auth screens (Login/Signup) are fully responsive for mobile devices.
+    *   **Redirects**: Users are sent to the correct dashboard based on their role (Admin, Patient, etc.).
 
 3.  **Super Admin Dashboard**:
     *   **User Management**: Can see list of all users and admins.
+    *   **Order Tracking**: A new **"Bookings"** tab allows tracking all lab test transactions and order history.
     *   **Stats**: Fetches real counts of users and revenue.
 
 4.  **Database & Backend**:
-    *   **Database Setup**: SQLite (Local file).
-    *   **Setup Script**: `setup.bat` automates schema push and seeding.
-    *   **API Routes**: Basic endpoints for bookings, auth, and user management are active.
+    *   **Database**: Migrated to **MongoDB Atlas** for production-grade storage.
+    *   **Email System**: Nodemailer integration is active for system notifications and verification links.
+    *   **API Routes**: Enhanced endpoints for secure signup, CAPTCHA validation, and order management.
 
 ---
 
@@ -45,9 +48,6 @@ These features are either using "mock data" (fake examples) or are not yet built
     *   **Checkout**: The payment page exists but simulates successful payment after 2 seconds. Real Razorpay/Stripe integration is needed for actual money transfer.
     *   **Cart**: The "Add to Cart" functionality needs verification across all pages.
 
-4.  **Notifications**:
-    *   Email/SMS alerts for booking confirmation are not yet implemented.
-
 ---
 
 ## 📋 Recommended Next Steps
@@ -63,15 +63,12 @@ These features are either using "mock data" (fake examples) or are not yet built
 If you restart the computer or server, always follow these steps to ensure everything works:
 
 1.  **Stop any running servers** (Ctrl + C in terminal).
-2.  **Run the Setup Script** (Only needed once or if data feels broken):
-    ```powershell
-    .\setup.bat
-    ```
+2.  **Environment Variables**: Ensure `.env.local` contains valid MongoDB and Google/ReCAPTCHA keys.
 3.  **Start the Website**:
     ```powershell
     npm run dev
     ```
 
 **Login Credentials for Testing:**
-*   **Patient**: `patient1@example.com` / `Patient@123`
-*   **Super Admin**: `superadmin@milabs.com` / `SuperAdmin@123`
+*   **Patient**: (User's personal email after verification)
+*   **Super Admin**: `superadmin@milabs.com` / `SuperAdmin@123` (or set manually in MongoDB)

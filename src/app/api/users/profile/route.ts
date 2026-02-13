@@ -8,6 +8,7 @@ const updateProfileSchema = z.object({
     name: z.string().min(2).optional(),
     phone: z.string().optional(),
     address: z.string().optional(),
+    pincode: z.string().optional(),
 });
 
 export async function GET(request: Request) {
@@ -46,14 +47,15 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: result.error.flatten() }, { status: 400 });
         }
 
-        const { name, phone, address } = result.data;
+        const { name, phone, address, pincode } = result.data;
 
         const updatedUser = await prisma.user.update({
             where: { email: session.user.email },
             data: {
                 name,
                 phone,
-                address
+                address,
+                pincode
             }
         });
 

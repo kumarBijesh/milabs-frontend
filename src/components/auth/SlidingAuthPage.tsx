@@ -279,6 +279,7 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
                             {/* CAPTCHA - Only visible in Signup Mode */}
                             <div className="py-2">
                                 <ReCAPTCHA
+                                    key={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                                     ref={recaptchaRef}
                                     sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
                                     onChange={(token) => setCaptchaToken(token)}

@@ -13,7 +13,8 @@ export default function ProfilePage() {
         name: '',
         email: '',
         phone: '',
-        address: ''
+        address: '',
+        pincode: ''
     });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -28,7 +29,8 @@ export default function ProfilePage() {
                             name: data.name || user.name || '',
                             email: data.email || user.email || '',
                             phone: data.phone || '',
-                            address: data.address || ''
+                            address: data.address || '',
+                            pincode: data.pincode || ''
                         });
                     }
                 } catch (error) {
@@ -127,15 +129,27 @@ export default function ProfilePage() {
                                 icon={Phone}
                                 placeholder="+91 99999 99999"
                             />
-                            <div className="md:col-span-2">
-                                <Input
-                                    label="Address"
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                    icon={MapPin}
-                                    placeholder="Enter your address"
-                                />
+                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="md:col-span-2">
+                                    <Input
+                                        label="Address"
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        icon={MapPin}
+                                        placeholder="Enter your address"
+                                    />
+                                </div>
+                                <div className="md:col-span-1">
+                                    <Input
+                                        label="Zip Code"
+                                        name="pincode"
+                                        value={formData.pincode}
+                                        onChange={handleChange}
+                                        placeholder="Zip Code"
+                                        className="w-full"
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end">
