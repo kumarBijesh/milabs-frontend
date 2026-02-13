@@ -10,7 +10,7 @@ These features are fully functional and connected to the real database:
     *   **Overview**: Shows real bookings stats and welcome message.
     *   **Bookings**: Lists real appointments from the database.
     *   **Reports**: Displays completed tests (simulated via booking status).
-    *   **Profile**: Allows viewing user profile data.
+    *   **Profile**: Allows viewing and updating user profile data, including the new **Zip Code** field.
     *   **Safety Fix**: The "crash" issue has been resolved.
 
 2.  **Authentication System (Enhanced)**:
@@ -40,7 +40,7 @@ These features are either using "mock data" (fake examples) or are not yet built
     *   The "Lab Admin" panel is currently **empty**. Lab partners cannot yet log in to manage their received bookings.
 
 2.  **Marketplace & Search**:
-    *   **Labs Page**: Currently shows a static list of fake labs (`City Lab`, `Wellness Labs`). It does not fetch real labs from the database yet.
+    *   **Labs Page**: Now fetches real active labs from the database (Connected).
     *   **Deals Page**: Shows fake packages. Needs to be connected to real "Test Packages" in the database.
     *   **Search**: The search bar logic needs validation to ensure it queries real tests.
 
