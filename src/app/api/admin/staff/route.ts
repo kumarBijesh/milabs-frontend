@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         const { name, email, password, role, labId } = body;
 
         // 1. Verify if current user has permission to create this role
-        const allowedRoles = ROLE_PERMISSIONS[currentUser.role as keyof typeof ROLE_PERMISSIONS] || [];
+        const allowedRoles: string[] = ROLE_PERMISSIONS[currentUser.role as keyof typeof ROLE_PERMISSIONS] || [];
         if (!allowedRoles.includes(role)) {
             return NextResponse.json({
                 error: `Permission denied: ${currentUser.role} cannot create ${role}`
