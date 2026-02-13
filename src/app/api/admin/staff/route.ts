@@ -46,10 +46,10 @@ export async function POST(request: Request) {
         // If Lab Admin is creating a user, force the labId to be their own labId
         let finalLabId = labId;
         if (currentUser.role === 'lab_admin') {
-            if (!currentUser.labId) {
+            if (!(currentUser as any).labId) {
                 return NextResponse.json({ error: 'Lab Admin is not associated with any Lab' }, { status: 400 });
             }
-            finalLabId = currentUser.labId; // Force assignment to same lab
+            finalLabId = (currentUser as any).labId; // Force assignment to same lab
         }
 
         // If Super Admin is creating a lab role, they MUST provide a labId
@@ -109,10 +109,10 @@ export async function GET(request: Request) {
             };
         } else if (currentUser.role === 'lab_admin') {
             // Can only see staff in THEIR lab
-            if (!currentUser.labId) return NextResponse.json({ error: 'No Lab assigned' }, { status: 400 });
+            if (!(currentUser as any).labId) return NextResponse.json({ error: 'No Lab assigned' }, { status: 400 });
 
             whereClause = {
-                labId: currentUser.labId,
+                labId: (currentUser as any).labId,
                 role: { in: ['marketing_admin', 'support_admin'] } // Only see their staff
             };
         } else if (currentUser.role === 'admin') {
