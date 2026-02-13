@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import useSWR from 'swr';
 import { ShieldCheck, UserPlus, Trash2, Edit2, Loader2, AlertCircle } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function AdminManagement() {
     };
 
     // Use Effect to load initial data
-    useState(() => {
+    useEffect(() => {
         fetchStaff();
     }, []);
 

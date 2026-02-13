@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 // RBAC Configuration
-const ROLE_PERMISSIONS = {
+const ROLE_PERMISSIONS: Record<string, string[]> = {
     super_admin: ['super_admin', 'admin', 'viewer_admin', 'lab_admin', 'marketing_admin', 'support_admin'],
     admin: ['viewer_admin', 'lab_admin', 'marketing_admin', 'support_admin'], // Admin can create lower roles
     lab_admin: ['marketing_admin', 'support_admin'], // Lab Admin can only create staff for their lab
