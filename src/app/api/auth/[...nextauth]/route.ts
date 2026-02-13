@@ -23,15 +23,11 @@ export const authOptions: NextAuthOptions = {
                 const user = await prisma.user.findUnique({ where: { email } });
                 if (!user || !user.password) return null;
 
-                // Only require verification for patients (to prevent admin lockout if not verified)
-                if (!user.isVerified && user.role === 'patient') {
-                    throw new Error("Please verify your email first.");
-                }
-
                 const isValid = await bcrypt.compare(credentials.password, user.password);
                 if (!isValid) return null;
 
                 // Admin OTP Check
+                // Role-Based Access Control logic for login
                 if (['super_admin', 'admin', 'lab_admin', 'marketing_admin', 'support_admin', 'viewer_admin'].includes(user.role)) {
                     const otp = (credentials as any).otp;
 
@@ -69,10 +65,12 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || '',
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            allowDangerousEmailAccountLinking: true,
         }),
         FacebookProvider({
             clientId: process.env.FACEBOOK_CLIENT_ID || '',
             clientSecret: process.env.FACEBOOK_CLIENT_SECRET || '',
+            allowDangerousEmailAccountLinking: true,
         }),
     ],
     callbacks: {

@@ -69,13 +69,13 @@ export async function POST(request: Request) {
                     // This happens if sendEmail returns null (error sending)
                     return NextResponse.json({
                         success: true,
-                        message: 'Account exists but is unverified. Failed to send verification email (check server logs).'
+                        message: 'Account exists. Please log in. (Verification email failed to send).'
                     });
                 }
 
                 return NextResponse.json({
                     success: true,
-                    message: 'Account exists but is not verified. A new verification email has been sent.'
+                    message: 'Account exists. We have sent a new verification link, but you can log in now.'
                 });
             }
         }

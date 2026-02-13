@@ -136,6 +136,7 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
             }
 
             alert(data.message || 'Account created! Please check your email to verify your account before logging in.');
+            setSignupData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
             toggleMode(); // Switch to login
 
         } catch (error) {
