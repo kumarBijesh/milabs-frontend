@@ -6,7 +6,16 @@ import { prisma } from '@/lib/prisma';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import { sendEmail, getOtpEmail } from '@/lib/email';
-import crypto from 'crypto';
+
+// Debug check for NextAuth keys in server console
+if (typeof window === 'undefined') {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+        console.warn('\x1b[31m%s\x1b[0m', '⚠️  NextAuth: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing!');
+    }
+    if (!process.env.NEXTAUTH_SECRET) {
+        console.warn('\x1b[31m%s\x1b[0m', '⚠️  NextAuth: NEXTAUTH_SECRET is missing!');
+    }
+}
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
@@ -27,16 +36,13 @@ export const authOptions: NextAuthOptions = {
                 if (!isValid) return null;
 
                 // Admin OTP Check
-                // Role-Based Access Control logic for login
                 if (['super_admin', 'admin', 'lab_admin', 'marketing_admin', 'support_admin', 'viewer_admin'].includes(user.role)) {
                     const otp = (credentials as any).otp?.toString();
 
-                    // If OTP provided, Verify it
                     if (otp) {
                         if (user.otp !== otp || !user.otpExpires || new Date() > user.otpExpires) {
                             throw new Error("Invalid or expired OTP");
                         }
-                        // Clear OTP (security) and mark as verified
                         await prisma.user.update({
                             where: { id: user.id },
                             data: {
@@ -48,9 +54,8 @@ export const authOptions: NextAuthOptions = {
                         return user;
                     }
 
-                    // If OTP NOT provided, Generate & Send
                     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+                    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
                     await prisma.user.update({
                         where: { id: user.id },
@@ -79,8 +84,6 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async session({ session, token, user }) {
-            // When using JWT strategy, 'user' is undefined, and we use 'token'
-            // When using database strategy (default with adapter), 'token' is undefined and we use 'user'
             if (session?.user) {
                 if (token) {
                     (session.user as any).role = token.role || 'patient';
@@ -92,11 +95,32 @@ export const authOptions: NextAuthOptions = {
             }
             return session;
         },
-        async jwt({ token, user, account }) {
+        async jwt({ token, user }) {
             if (user) {
                 token.role = (user as any).role || 'patient';
             }
             return token;
+        },
+        async signIn({ user, account }) {
+            if (account?.provider !== 'credentials') {
+                try {
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { isVerified: true, emailVerified: new Date() }
+                    });
+                } catch (error) {
+                    console.error('Failed to update social user verification:', error);
+                }
+            }
+            return true;
+        }
+    },
+    events: {
+        async createUser({ user }) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { isVerified: true, emailVerified: new Date() }
+            });
         }
     },
     session: {
@@ -105,9 +129,8 @@ export const authOptions: NextAuthOptions = {
     pages: {
         signIn: '/auth/login',
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET || 'dev-secret-key-replace-in-prod',
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
