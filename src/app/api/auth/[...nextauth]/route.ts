@@ -19,7 +19,8 @@ export const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) return null;
-                const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+                const email = credentials.email.toLowerCase().trim();
+                const user = await prisma.user.findUnique({ where: { email } });
                 if (!user || !user.password) return null;
 
                 // Only require verification for patients (to prevent admin lockout if not verified)

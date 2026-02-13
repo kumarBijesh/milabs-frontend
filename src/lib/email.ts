@@ -11,12 +11,19 @@ const transporter = nodemailer.createTransport({
 export const sendEmail = async (to: string, subject: string, html: string) => {
     try {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
-            console.log('---------------------------------------------------');
-            console.log('⚠️ Email credentials missing. Logging email content:');
+            console.log('\n\x1b[33m%s\x1b[0m', '---------------------------------------------------');
+            console.log('\x1b[33m%s\x1b[0m', '⚠️  Email credentials missing. Simulating email send:');
             console.log(`To: ${to}`);
             console.log(`Subject: ${subject}`);
-            console.log('---------------------------------------------------');
-            return null;
+
+            // Extract link if present for easier clicking
+            const linkMatch = html.match(/href="(.*?)"/);
+            if (linkMatch) {
+                console.log('\x1b[36m%s\x1b[0m', `👉 Action Link: ${linkMatch[1]}`);
+            }
+
+            console.log('\x1b[33m%s\x1b[0m', '---------------------------------------------------');
+            return { messageId: 'simulated' };
         }
 
         const info = await transporter.sendMail({

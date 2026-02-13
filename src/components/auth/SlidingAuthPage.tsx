@@ -47,7 +47,8 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
     const [loginPassword, setLoginPassword] = useState('');
 
     // Signup Form State
-    const [signupData, setSignupData] = useState({ firstName: '', lastName: '', email: '', password: '' });
+    const [signupData, setSignupData] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
+    const [passwordError, setPasswordError] = useState<string | null>(null);
 
     const toggleMode = () => {
         setIsLogin(!isLogin);
@@ -61,7 +62,7 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
         setIsLoading(true);
         try {
             const result = await signIn('credentials', {
-                email: loginEmail,
+                email: loginEmail.toLowerCase().trim(),
                 password: loginPassword,
                 redirect: false
             });
@@ -88,12 +89,41 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
             return;
         }
 
+        // Name Validation
+        const nameRegex = /^[a-zA-Z\s'-]{2,50}$/;
+        if (!nameRegex.test(signupData.firstName)) {
+            alert('First Name must be 2-50 characters and contain only letters, spaces, hyphens, or apostrophes.');
+            return;
+        }
+        if (!nameRegex.test(signupData.lastName)) {
+            alert('Last Name must be 2-50 characters and contain only letters, spaces, hyphens, or apostrophes.');
+            return;
+        }
+
+        if (signupData.password !== signupData.confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+
+        // Password Validation
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{10,32}$/;
+        if (!passwordRegex.test(signupData.password)) {
+            setPasswordError('Password must match criteria below.');
+            return;
+        } else {
+            setPasswordError(null);
+        }
+
         setIsLoading(true);
         try {
             const res = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...signupData, captchaToken }),
+                body: JSON.stringify({
+                    ...signupData,
+                    email: signupData.email.toLowerCase().trim(),
+                    captchaToken
+                }),
             });
 
             const data = await res.json();
@@ -105,7 +135,7 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
                 return;
             }
 
-            alert('Account created! Please check your email to verify your account before logging in.');
+            alert(data.message || 'Account created! Please check your email to verify your account before logging in.');
             toggleMode(); // Switch to login
 
         } catch (error) {
@@ -261,8 +291,11 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         value={signupData.password}
-                                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-purple-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-600"
+                                        onChange={(e) => {
+                                            setSignupData({ ...signupData, password: e.target.value });
+                                            setPasswordError(null);
+                                        }}
+                                        className={`w-full bg-slate-50 dark:bg-black/50 border ${passwordError ? 'border-red-500' : 'border-slate-200 dark:border-zinc-800'} rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-purple-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-600`}
                                         placeholder="Create a password"
                                         required
                                     />
@@ -274,6 +307,22 @@ function SlidingAuthPageContent({ initialMode = 'login' }: SlidingAuthPageProps)
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
                                 </div>
+                                {passwordError && <p className="text-[10px] text-red-500 ml-1 mt-1">{passwordError}</p>}
+                                <p className="text-[10px] text-slate-400 ml-1 mt-1">
+                                    Min 10 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.
+                                </p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-slate-500 dark:text-zinc-400 ml-1">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    value={signupData.confirmPassword}
+                                    onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+                                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-purple-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-600"
+                                    placeholder="Re-enter password"
+                                    required
+                                />
                             </div>
 
                             {/* CAPTCHA - Only visible in Signup Mode */}
